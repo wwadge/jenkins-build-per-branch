@@ -17,9 +17,12 @@ class Main {
             s: [longOpt: 'start-on-create', required: false, args: 0, argName: 'startOnCreate', description:  "When creating a new job, start it at once."],
             v: [longOpt: 'no-views', required: false, args: 0, argName: 'noViews', description: "Suppress view creation - gradle flag -DnoViews=true"],
             k: [longOpt: 'no-delete', required: false, args: 0, argName: 'noDelete', description: "Do not delete (keep) branches and views - gradle flag -DnoDelete=true"],
+            du: [longOpt: 'post-delete', required: false, args: 1, argName: 'postDelete', description: "Job to run post branch deletion, such as cleaning up jobs;passes in jobname as 'jobname=<job> - gradle flag -DpostDelete=<jobtoCall>"],
             f: [longOpt: 'filter-branch-names', required: false, args:  1, argName:  'branchNameRegex', description: "Only branches matching the regex will be accepted - gradle flag: -DbranchNameRegex=<regex>"],
             usr: [longOpt: 'jenkins-user',  required: false, args: 1, argName: 'jenkinsUser', description: "Jenkins username - gradle flag -DjenkinsUser=<jenkinsUser>"],
-            pwd: [longOpt: 'jenkins-password',  required: false, args: 1, argName: 'jenkinsPassword', description: "Jenkins password - gradle flag -DjenkinsPassword=<jenkinsPassword>"]
+            pwd: [longOpt: 'jenkins-password',  required: false, args: 1, argName: 'jenkinsPassword', description: "Jenkins password - gradle flag -DjenkinsPassword=<jenkinsPassword>"],
+            jd: [longOpt: 'deploy-base-job-name',  required: false, args: 1, argName: 'deployJobBaseName', description: "Deploy base Job Name - Required to delete jobs that used a deployment - gradle flag -DdeployJobBaseName=<deployJobBaseName>"],
+            rp: [longOpt: 'repopulate-jobs', required: false, args:  0, argName:  'repopulateJobs', description: "Deletes all jobs and repopulates them- VERY DANGEROUS - gradle flag: -DrepopulateJobs=true"]
     ]
 
     public static void main(String[] args) {

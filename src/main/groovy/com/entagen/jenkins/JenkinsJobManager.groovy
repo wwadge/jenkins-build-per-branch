@@ -1,6 +1,7 @@
 package com.entagen.jenkins
 
 import java.util.regex.Pattern
+import groovy.json.JsonSlurper
 
 class JenkinsJobManager {
     String templateJobPrefix
@@ -16,7 +17,9 @@ class JenkinsJobManager {
     Boolean noViews = false
     Boolean noDelete = false
     Boolean startOnCreate = false
-
+    Boolean repopulateJobs = false
+    String postDelete
+    String deployJobBaseName
     JenkinsApi jenkinsApi
     GitApi gitApi
 
@@ -49,9 +52,18 @@ class JenkinsJobManager {
         List<String> nonTemplateBranchNames = allBranchNames - templateBranchName
         List<ConcreteJob> expectedJobs = this.expectedJobs(templateJobs, nonTemplateBranchNames)
 
+        if(repopulateJobs)
+        {
+            println "==============================================================="
+            println "Deleting all jobs in 10 seconds and recreating - Hit Ctrl+C to stop!"
+            println "==============================================================="
+            Thread.currentThread().sleep(10000); 
+            deleteDeprecatedJobs(expectedJobs.jobName);
+        }
+        
         createMissingJobs(expectedJobs, currentTemplateDrivenJobNames, templateJobs)
         if (!noDelete) {
-            deleteDeprecatedJobs(currentTemplateDrivenJobNames - expectedJobs.jobName)
+            deleteDeprecatedJobs(currentTemplateDrivenJobNames  - expectedJobs.jobName)
         }
     }
 
@@ -72,8 +84,22 @@ class JenkinsJobManager {
     public void deleteDeprecatedJobs(List<String> deprecatedJobNames) {
         if (!deprecatedJobNames) return
         println "Deleting deprecated jobs:\n\t${deprecatedJobNames.join('\n\t')}"
-        deprecatedJobNames.each { String jobName ->
-            jenkinsApi.deleteJob(jobName)
+        deprecatedJobNames.each { String job->
+            
+            try{
+                jenkinsApi.deleteJob(job)
+            }
+            catch(Exception ex)
+            {
+                println(ex.message)
+            }
+            if(postDelete !=null && job.startsWith(deployJobBaseName))
+            {
+                println "Running post deletion job for:\n\t${job.replaceAll(deployJobBaseName, '')}"
+                 def body = [:]
+                 body = [json:  '{"parameter":[{"name": "jobName", "value": "' + job.replaceAll(deployJobBaseName, '') + '"}]}']
+                 jenkinsApi.startJobWithParameters(postDelete, body)
+            }
         }
     }
 
@@ -144,7 +170,7 @@ class JenkinsJobManager {
     JenkinsApi initJenkinsApi() {
         if (!jenkinsApi) {
             assert jenkinsUrl != null
-            if (dryRun) {
+            if (dryRun){
                 println "DRY RUN! Not executing any POST commands to Jenkins, only GET commands"
                 this.jenkinsApi = new JenkinsApiReadOnly(jenkinsServerUrl: jenkinsUrl)
             } else {
