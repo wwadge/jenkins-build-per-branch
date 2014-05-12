@@ -56,8 +56,15 @@ class JenkinsApi {
         TemplateJob templateJob = missingJob.templateJob
 
         //Copy job with jenkins copy job api, this will make sure jenkins plugins get the call to make a copy if needed (promoted builds plugin needs this)
+        try{
         post('createItem', missingJobConfig, [name: missingJob.jobName, mode: 'copy', from: templateJob.jobName], ContentType.XML)
-
+        }
+        catch(Exception ex)
+        {
+            println ex.message
+            println ex.getClass().toString()
+            println templateJob.jobName
+        }
         post('job/' + missingJob.jobName + "/config.xml", missingJobConfig, [:], ContentType.XML)
         //Forced disable enable to work around Jenkins' automatic disabling of clones jobs
         //But only if the original job was enabled
