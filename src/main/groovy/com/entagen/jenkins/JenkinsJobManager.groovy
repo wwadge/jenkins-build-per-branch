@@ -93,11 +93,11 @@ class JenkinsJobManager {
             {
                 println(ex.message)
             }
-            if(postDelete !=null && job.startsWith(deployJobBaseName))
+            if(postDelete !=null )
             {
-                println "Running post deletion job for:\n\t${job.replaceAll(deployJobBaseName, '')}"
+                println "Running post deletion job for:\n\t${job}"
                  def body = [:]
-                 body = [json:  '{"parameter":[{"name": "jobName", "value": "' + job.replaceAll(deployJobBaseName, '') + '"}]}']
+                 body = [json:  '{"parameter":[{"name": "jobName", "value": "' + job + '"}]}']
                  jenkinsApi.startJobWithParameters(postDelete, body)
             }
         }
